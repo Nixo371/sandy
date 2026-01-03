@@ -63,19 +63,19 @@ game_state* init_game_state() {
 	return (state);
 }
 
-void add_sand_particle(game_state* state, int x, int y) {
+void add_particle(game_state* state, int x, int y, particle_type type) {
 	if (in_bounds(x, y)) {
-		state->board[x][y].type = SAND;
+		state->board[x][y].type = type;
 	}
 }
 
-void add_sand_blob(game_state* state, int x, int y, int radius) {
+void add_particle_blob(game_state* state, int x, int y, int radius, particle_type type) {
 	for (int x2 = x - radius; x2 < x + radius; x2++) {
 		for (int y2 = y - radius; y2 < y + radius; y2++) {
 			int x2_norm = x2 - x;
 			int y2_norm = y2 - y;
 			if ((x2_norm * x2_norm) + (y2_norm * y2_norm) < (radius * radius)) {
-				add_sand_particle(state, x2, y2);
+				add_particle(state, x2, y2, type);
 			}
 		}
 	}
@@ -193,7 +193,10 @@ int main() {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		mouse_buttons = SDL_GetGlobalMouseState(NULL, NULL);
 		if (mouse_buttons & SDL_BUTTON_LMASK) {
-			add_sand_blob(state, (int)mouse_x, (int)mouse_y, BLOB_RADIUS);
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, BLOB_RADIUS, SAND);
+		}
+		if (mouse_buttons & SDL_BUTTON_RMASK) {
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, BLOB_RADIUS, AIR);
 		}
 
 		SDL_Delay(FRAME_TIME_MS);
