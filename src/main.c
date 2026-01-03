@@ -120,7 +120,10 @@ void update_particle(game_state* state, int x, int y) {
 void update_all_particles(game_state* state) {
 	// Update from down up
 	for (int y = HEIGHT - 1; y >= 0; y--) {
-		for (int x = 0; x < WIDTH; x++) {
+		for (int x = 0; x < WIDTH; x += 2) {
+			update_particle(state, x, y);
+		}
+		for (int x = 1; x < WIDTH; x += 2) {
 			update_particle(state, x, y);
 		}
 	}
