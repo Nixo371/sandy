@@ -5,6 +5,7 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_main.h>
 
 #include <stdio.h>
@@ -15,8 +16,10 @@
 #define WIDTH 900
 #define HEIGHT 600
 
-#define FPS 240
+#define FPS 120
 #define FRAME_TIME_MS (1000 / FPS)
+
+#define BLOB_RADIUS 10
 
 typedef enum e_particle_type {
 	AIR,
@@ -61,7 +64,21 @@ game_state* init_game_state() {
 }
 
 void add_sand_particle(game_state* state, int x, int y) {
-	state->board[x][y].type = SAND;
+	if (in_bounds(x, y)) {
+		state->board[x][y].type = SAND;
+	}
+}
+
+void add_sand_blob(game_state* state, int x, int y, int radius) {
+	for (int x2 = x - radius; x2 < x + radius; x2++) {
+		for (int y2 = y - radius; y2 < y + radius; y2++) {
+			int x2_norm = x2 - x;
+			int y2_norm = y2 - y;
+			if ((x2_norm * x2_norm) + (y2_norm * y2_norm) < (radius * radius)) {
+				add_sand_particle(state, x2, y2);
+			}
+		}
+	}
 }
 
 void free_game_state(game_state* state) {
@@ -79,17 +96,21 @@ void update_particle(game_state* state, int x, int y) {
 		case AIR:
 			break;
 		case SAND:
+			// Randomize which direction is checked first
+			int dir = rand() % 2 == 0 ? 1 : -1;
+
+			// Straight Down
 			if (in_bounds(x, y + 1) && state->board[x][y + 1].type == AIR) {
 				state->board[x][y].type = AIR;
 				state->board[x][y + 1].type = SAND;
 			}
-			else if (in_bounds(x - 1, y + 1) && state->board[x - 1][y + 1].type == AIR) {
+			else if (in_bounds(x - dir, y + 1) && state->board[x - dir][y + 1].type == AIR) {
 				state->board[x][y].type = AIR;
-				state->board[x - 1][y + 1].type = SAND;
+				state->board[x - dir][y + 1].type = SAND;
 			}
-			else if (in_bounds(x + 1, y + 1) && state->board[x + 1][y + 1].type == AIR) {
+			else if (in_bounds(x + dir, y + 1) && state->board[x + dir][y + 1].type == AIR) {
 				state->board[x][y].type = AIR;
-				state->board[x + 1][y + 1].type = SAND;
+				state->board[x + dir][y + 1].type = SAND;
 			}
 
 			break;
@@ -109,6 +130,7 @@ int main() {
 	srand(time(NULL));
 
 	game_state* state = init_game_state();
+	/*
 	for (int x = WIDTH * 0.4; x < WIDTH * 0.6; x++) {
 		for (int y = HEIGHT * 0.4; y < HEIGHT * 0.6; y++) {
 			if (rand() % 3 == 0) {
@@ -116,6 +138,10 @@ int main() {
 			}
 		}
 	}
+	*/
+	float mouse_x;
+	float mouse_y;
+	SDL_MouseButtonFlags mouse_buttons = SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
 
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
@@ -160,6 +186,13 @@ int main() {
 		SDL_RenderPresent(main_renderer);
 
 		update_all_particles(state);
+
+		SDL_GetMouseState(&mouse_x, &mouse_y);
+		mouse_buttons = SDL_GetGlobalMouseState(NULL, NULL);
+		if (mouse_buttons & SDL_BUTTON_LMASK) {
+			add_sand_blob(state, (int)mouse_x, (int)mouse_y, BLOB_RADIUS);
+		}
+
 		SDL_Delay(FRAME_TIME_MS);
 	}
 
