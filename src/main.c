@@ -2,7 +2,9 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
+#include <SDL3/SDL_time.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_mouse.h>
@@ -18,8 +20,11 @@
 
 #define FPS 120
 #define FRAME_TIME_MS (1000 / FPS)
+#define FRAME_TIME_NS (1000000000 / FPS)
 
-#define BLOB_RADIUS 10
+#define DEFAULT_BLOB_RADIUS 10
+#define MIN_BLOB_RADIUS 1
+#define MAX_BLOB_RADIUS 100
 
 typedef enum e_particle_type {
 	AIR,
@@ -34,6 +39,7 @@ typedef struct s_particle {
 
 typedef struct s_game_state {
 	particle** board;
+	int blob_radius;
 } game_state;
 
 int in_bounds(int x, int y) {
@@ -60,6 +66,8 @@ game_state* init_game_state() {
 		}
 	}
 
+	state->blob_radius = DEFAULT_BLOB_RADIUS;
+
 	return (state);
 }
 
@@ -69,7 +77,9 @@ void add_particle(game_state* state, int x, int y, particle_type type) {
 	}
 }
 
-void add_particle_blob(game_state* state, int x, int y, int radius, particle_type type) {
+void add_particle_blob(game_state* state, int x, int y, particle_type type) {
+	int radius = state->blob_radius;
+
 	for (int x2 = x - radius; x2 < x + radius; x2++) {
 		for (int y2 = y - radius; y2 < y + radius; y2++) {
 			int x2_norm = x2 - x;
@@ -99,7 +109,6 @@ void update_particle(game_state* state, int x, int y) {
 			// Randomize which direction is checked first
 			int dir = rand() % 2 == 0 ? 1 : -1;
 
-			// Straight Down
 			if (in_bounds(x, y + 1) && state->board[x][y + 1].type == AIR) {
 				state->board[x][y].type = AIR;
 				state->board[x][y + 1].type = SAND;
@@ -133,15 +142,8 @@ int main() {
 	srand(time(NULL));
 
 	game_state* state = init_game_state();
-	/*
-	for (int x = WIDTH * 0.4; x < WIDTH * 0.6; x++) {
-		for (int y = HEIGHT * 0.4; y < HEIGHT * 0.6; y++) {
-			if (rand() % 3 == 0) {
-				add_sand_particle(state, x, y);
-			}
-		}
-	}
-	*/
+	int sand_count;
+
 	float mouse_x;
 	float mouse_y;
 	SDL_MouseButtonFlags mouse_buttons = SDL_GetGlobalMouseState(&mouse_x, &mouse_y);
@@ -163,13 +165,26 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
+	SDL_Time start_time;
+	SDL_Time end_time;
+
 	SDL_Event event;
 	int running = 1;
 	while (running == 1) {
+		SDL_GetCurrentTime(&start_time);
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				printf("Quitting...\n");
 				running = 0;
+			}
+			if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+				state->blob_radius += event.wheel.y;
+				if (state->blob_radius < MIN_BLOB_RADIUS) {
+					state->blob_radius = MIN_BLOB_RADIUS;
+				}
+				if (state->blob_radius > MAX_BLOB_RADIUS) {
+					state->blob_radius = MAX_BLOB_RADIUS;
+				}
 			}
 		}
 
@@ -178,10 +193,12 @@ int main() {
 
 		// #FFD000 "Gold Web" sand-ish color
 		SDL_SetRenderDrawColor(main_renderer, 255, 208, 0, SDL_ALPHA_OPAQUE);
+		sand_count = 0;
 		for (int x = 0; x < WIDTH; x++) {
 			for (int y = 0; y < HEIGHT; y++) {
 				if (state->board[x][y].type == SAND) {
 					SDL_RenderPoint(main_renderer, x, y);
+					sand_count += 1;
 				}
 			}
 		}
@@ -193,13 +210,24 @@ int main() {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		mouse_buttons = SDL_GetGlobalMouseState(NULL, NULL);
 		if (mouse_buttons & SDL_BUTTON_LMASK) {
-			add_particle_blob(state, (int)mouse_x, (int)mouse_y, BLOB_RADIUS, SAND);
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, SAND);
 		}
 		if (mouse_buttons & SDL_BUTTON_RMASK) {
-			add_particle_blob(state, (int)mouse_x, (int)mouse_y, BLOB_RADIUS, AIR);
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, AIR);
 		}
 
-		SDL_Delay(FRAME_TIME_MS);
+		// Calculate how much time to wait after the frame
+		SDL_GetCurrentTime(&end_time);
+		Uint64 frame_time = end_time - start_time;
+		if (frame_time < FRAME_TIME_NS) {
+			// Need to wait some extra
+			SDL_DelayNS(FRAME_TIME_NS - frame_time);
+			// printf("FPS: %03.2f", (float)FPS);
+		}
+		else {
+			// printf("FPS: %03.2f", 1000000000.0 / frame_time);
+		}
+		// printf(" Sand Particles: %d\n", sand_count);
 	}
 
 	SDL_DestroyRenderer(main_renderer);
