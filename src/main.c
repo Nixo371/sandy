@@ -26,6 +26,8 @@
 #define MIN_BLOB_RADIUS 1
 #define MAX_BLOB_RADIUS 100
 
+#define CURSOR_THICKNESS 2
+
 typedef enum e_particle_type {
 	AIR,
 	SAND
@@ -51,6 +53,20 @@ int in_bounds(int x, int y) {
 	}
 
 	return (1);
+}
+
+void draw_circle(SDL_Renderer* renderer, float x, float y, float radius, float thickness) {
+	for (float x2 = x - radius - (thickness/2 + 1); x2 <= x + radius + (thickness/2 + 1); x2 += 1) {
+		for (float y2 = y - radius - (thickness/2 + 1); y2 <= y + radius + (thickness/2 + 1); y2 += 1) {
+			float x_norm = x2 - x;
+			float y_norm = y2 - y;
+			float dist_sq = (x_norm * x_norm) + (y_norm * y_norm);
+			float radius_sq = radius * radius;
+			if (dist_sq < radius_sq + (radius * thickness) && dist_sq > radius_sq - (radius * thickness)) {
+				SDL_RenderPoint(renderer, x2, y2);
+			}
+		}
+	}
 }
 
 game_state* init_game_state() {
@@ -165,6 +181,8 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
+	SDL_HideCursor();
+
 	SDL_Time start_time;
 	SDL_Time end_time;
 
@@ -191,6 +209,7 @@ int main() {
 		SDL_SetRenderDrawColor(main_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(main_renderer);
 
+		// Render particles
 		// #FFD000 "Gold Web" sand-ish color
 		SDL_SetRenderDrawColor(main_renderer, 255, 208, 0, SDL_ALPHA_OPAQUE);
 		sand_count = 0;
@@ -202,6 +221,10 @@ int main() {
 				}
 			}
 		}
+
+		// Render cursor //
+		SDL_SetRenderDrawColor(main_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+		draw_circle(main_renderer, mouse_x, mouse_y, state->blob_radius, CURSOR_THICKNESS);
 
 		SDL_RenderPresent(main_renderer);
 
