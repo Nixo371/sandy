@@ -16,8 +16,11 @@ A simple sand simulator I made to learn about graphics programming in C with SDL
 ## Features
 - Terribly inefficient software rendering
 - Left Click to add sand
+![Demo](assets/sandy_adding_sand.gif)
 - Right Click to remove sand
+![Demo](assets/sandy_deleting_sand.gif)
 - Scroll to change the size of your cursor
+![Demo](assets/sandy_cursor_size.gif)
 
 ## Docs
 Not much here at the moment, I'll explain the #defines at the top that are useful:
