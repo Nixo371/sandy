@@ -17,19 +17,19 @@ A simple sand simulator I made to learn about graphics programming in C with SDL
 - Terribly inefficient software rendering
 - Left Click to add sand
 <div align="center">
-  <img src="https://github.com/Nixo371/sandy/blob/master/assets/sandy_spawning_sand.mp4?raw=true" style="width:100%; max-width:900px;" />
+  <img src="https://github.com/Nixo371/sandy/blob/master/assets/sandy_spawning_sand.gif?raw=true" style="width:100%; max-width:900px;" />
   <p><em>QGroundControl</em></p>
 </div>
 
 - Right Click to remove sand
 <div align="center">
-  <img src="https://github.com/Nixo371/sandy/blob/master/assets/sandy_deleting_sand.mp4?raw=true" style="width:100%; max-width:900px;" />
+  <img src="https://github.com/Nixo371/sandy/blob/master/assets/sandy_deleting_sand.gif?raw=true" style="width:100%; max-width:900px;" />
   <p><em>QGroundControl</em></p>
 </div>
 
 - Scroll to change the size of your cursor
 <div align="center">
-  <img src="https://github.com/Nixo371/sandy/blob/master/assets/sandy_cursor_size.mp4?raw=true" style="width:100%; max-width:900px;" />
+  <img src="https://github.com/Nixo371/sandy/blob/master/assets/sandy_cursor_size.gif?raw=true" style="width:100%; max-width:900px;" />
   <p><em>QGroundControl</em></p>
 </div>
 
