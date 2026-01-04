@@ -2,6 +2,7 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_time.h>
@@ -29,7 +30,7 @@
 #define CURSOR_THICKNESS 2
 
 typedef enum e_particle_type {
-	AIR,
+	EMPTY,
 	SAND
 } particle_type;
 
@@ -78,7 +79,7 @@ game_state* init_game_state() {
 		for (int j = 0; j < HEIGHT; j++) {
 			state->board[i][j].x = i;
 			state->board[i][j].y = j;
-			state->board[i][j].type = AIR;
+			state->board[i][j].type = EMPTY;
 		}
 	}
 
@@ -119,22 +120,22 @@ void free_game_state(game_state* state) {
 
 void update_particle(game_state* state, int x, int y) {
 	switch (state->board[x][y].type) {
-		case AIR:
+		case EMPTY:
 			break;
 		case SAND:
 			// Randomize which direction is checked first
 			int dir = rand() % 2 == 0 ? 1 : -1;
 
-			if (in_bounds(x, y + 1) && state->board[x][y + 1].type == AIR) {
-				state->board[x][y].type = AIR;
+			if (in_bounds(x, y + 1) && state->board[x][y + 1].type == EMPTY) {
+				state->board[x][y].type = EMPTY;
 				state->board[x][y + 1].type = SAND;
 			}
-			else if (in_bounds(x - dir, y + 1) && state->board[x - dir][y + 1].type == AIR) {
-				state->board[x][y].type = AIR;
+			else if (in_bounds(x - dir, y + 1) && state->board[x - dir][y + 1].type == EMPTY) {
+				state->board[x][y].type = EMPTY;
 				state->board[x - dir][y + 1].type = SAND;
 			}
-			else if (in_bounds(x + dir, y + 1) && state->board[x + dir][y + 1].type == AIR) {
-				state->board[x][y].type = AIR;
+			else if (in_bounds(x + dir, y + 1) && state->board[x + dir][y + 1].type == EMPTY) {
+				state->board[x][y].type = EMPTY;
 				state->board[x + dir][y + 1].type = SAND;
 			}
 
@@ -158,7 +159,6 @@ int main() {
 	srand(time(NULL));
 
 	game_state* state = init_game_state();
-	int sand_count;
 
 	float mouse_x;
 	float mouse_y;
@@ -182,6 +182,10 @@ int main() {
 	}
 
 	SDL_HideCursor();
+
+	int sand_points_capacity = 1024;
+	int sand_points_count = 0;
+	SDL_FPoint* sand_points = calloc(sand_points_capacity, sizeof(SDL_FPoint));
 
 	SDL_Time start_time;
 	SDL_Time end_time;
@@ -212,15 +216,21 @@ int main() {
 		// Render particles
 		// #FFD000 "Gold Web" sand-ish color
 		SDL_SetRenderDrawColor(main_renderer, 255, 208, 0, SDL_ALPHA_OPAQUE);
-		sand_count = 0;
+		sand_points_count = 0;
 		for (int x = 0; x < WIDTH; x++) {
 			for (int y = 0; y < HEIGHT; y++) {
 				if (state->board[x][y].type == SAND) {
-					SDL_RenderPoint(main_renderer, x, y);
-					sand_count += 1;
+					if (sand_points_count >= sand_points_capacity) {
+						sand_points_capacity *= 2;
+						sand_points = (SDL_FPoint *) realloc(sand_points, sand_points_capacity * sizeof(SDL_FPoint));
+					}
+					sand_points[sand_points_count].x = x;
+					sand_points[sand_points_count].y = y;
+					sand_points_count += 1;
 				}
 			}
 		}
+		SDL_RenderPoints(main_renderer, sand_points, sand_points_count);
 
 		// Render cursor //
 		SDL_SetRenderDrawColor(main_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -236,7 +246,7 @@ int main() {
 			add_particle_blob(state, (int)mouse_x, (int)mouse_y, SAND);
 		}
 		if (mouse_buttons & SDL_BUTTON_RMASK) {
-			add_particle_blob(state, (int)mouse_x, (int)mouse_y, AIR);
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, EMPTY);
 		}
 
 		// Calculate how much time to wait after the frame
@@ -250,7 +260,7 @@ int main() {
 		else {
 			// printf("FPS: %03.2f", 1000000000.0 / frame_time);
 		}
-		// printf(" Sand Particles: %d\n", sand_count);
+		// printf(" Sand Particles: %d\n", sand_points_count);
 	}
 
 	SDL_DestroyRenderer(main_renderer);
