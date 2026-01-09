@@ -31,7 +31,7 @@ A simple sand simulator I made to learn about graphics programming in C with SDL
 </p>
 
 ## Docs
-Not much here at the moment, I'll explain the #defines at the top that are useful:
+Not much here at the moment, I'll explain the #defines in `include/constants.h` that are useful:
 - **WIDTH** and **HEIGHT** define the window size
 - **FPS** defines the target FPS, the simulation will run at that framerate at the FASTEST
 - **DEFAULT_BLOB_RADIUS** sets the initial value for the radius of the cursor
