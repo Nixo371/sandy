@@ -1,3 +1,7 @@
+# bear
+.cache
+compile_commands.json
+
 # Cheatsheet
 SDLQuickReference
 

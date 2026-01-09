@@ -14,8 +14,9 @@ NAME = sandy
 
 all: $(NAME)
 
-$(NAME): $(OBJS) | $(BUILDDIR)
-	$(CC) $^ -o $(NAME) $(SDL_FLAGS) 
+$(NAME): $(BUILDDIR)
+$(NAME): $(OBJS)
+	$(CC) $(OBJS) -o $(BUILDDIR)/$(NAME) $(SDL_FLAGS)
 
 $(BUILDDIR):
 	mkdir -p $@

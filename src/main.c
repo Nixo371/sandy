@@ -11,50 +11,15 @@
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_main.h>
 
+#include "constants.h"
+
+#include "particle.h"
+#include "sandy.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
-#define WIDTH 900
-#define HEIGHT 600
-
-#define FPS 120
-#define FRAME_TIME_MS (1000 / FPS)
-#define FRAME_TIME_NS (1000000000 / FPS)
-
-#define DEFAULT_BLOB_RADIUS 10
-#define MIN_BLOB_RADIUS 1
-#define MAX_BLOB_RADIUS 100
-
-#define CURSOR_THICKNESS 2
-
-typedef enum e_particle_type {
-	EMPTY,
-	SAND
-} particle_type;
-
-typedef struct s_particle {
-	int x;
-	int y;
-	particle_type type;
-} particle;
-
-typedef struct s_game_state {
-	particle** board;
-	int blob_radius;
-} game_state;
-
-int in_bounds(int x, int y) {
-	if (x < 0 || x >= WIDTH) {
-		return (0);
-	}
-	if (y < 0 || y >= HEIGHT) {
-		return (0);
-	}
-
-	return (1);
-}
 
 void draw_circle(SDL_Renderer* renderer, float x, float y, float radius, float thickness) {
 	for (float x2 = x - radius - (thickness/2 + 1); x2 <= x + radius + (thickness/2 + 1); x2 += 1) {
@@ -88,26 +53,6 @@ game_state* init_game_state() {
 	return (state);
 }
 
-void add_particle(game_state* state, int x, int y, particle_type type) {
-	if (in_bounds(x, y)) {
-		state->board[x][y].type = type;
-	}
-}
-
-void add_particle_blob(game_state* state, int x, int y, particle_type type) {
-	int radius = state->blob_radius;
-
-	for (int x2 = x - radius; x2 < x + radius; x2++) {
-		for (int y2 = y - radius; y2 < y + radius; y2++) {
-			int x2_norm = x2 - x;
-			int y2_norm = y2 - y;
-			if ((x2_norm * x2_norm) + (y2_norm * y2_norm) < (radius * radius)) {
-				add_particle(state, x2, y2, type);
-			}
-		}
-	}
-}
-
 void free_game_state(game_state* state) {
 	for (int i = 0; i < WIDTH; i++) {
 		free(state->board[i]);
@@ -116,43 +61,6 @@ void free_game_state(game_state* state) {
 	state->board = NULL;
 
 	free(state);
-}
-
-void update_particle(game_state* state, int x, int y) {
-	switch (state->board[x][y].type) {
-		case EMPTY:
-			break;
-		case SAND:
-			// Randomize which direction is checked first
-			int dir = rand() % 2 == 0 ? 1 : -1;
-
-			if (in_bounds(x, y + 1) && state->board[x][y + 1].type == EMPTY) {
-				state->board[x][y].type = EMPTY;
-				state->board[x][y + 1].type = SAND;
-			}
-			else if (in_bounds(x - dir, y + 1) && state->board[x - dir][y + 1].type == EMPTY) {
-				state->board[x][y].type = EMPTY;
-				state->board[x - dir][y + 1].type = SAND;
-			}
-			else if (in_bounds(x + dir, y + 1) && state->board[x + dir][y + 1].type == EMPTY) {
-				state->board[x][y].type = EMPTY;
-				state->board[x + dir][y + 1].type = SAND;
-			}
-
-			break;
-	}
-}
-
-void update_all_particles(game_state* state) {
-	// Update from down up
-	for (int y = HEIGHT - 1; y >= 0; y--) {
-		for (int x = 0; x < WIDTH; x += 2) {
-			update_particle(state, x, y);
-		}
-		for (int x = 1; x < WIDTH; x += 2) {
-			update_particle(state, x, y);
-		}
-	}
 }
 
 int main() {
