@@ -14,4 +14,14 @@
 
 # define CURSOR_THICKNESS 2
 
+// Colors //
+# define WHITE  (SDL_Color) { 255, 255, 255, SDL_ALPHA_OPAQUE }
+# define BLACK  (SDL_Color) {   0,   0,   0, SDL_ALPHA_OPAQUE }
+# define RED    (SDL_Color) { 255,   0,   0, SDL_ALPHA_OPAQUE }
+# define ORANGE (SDL_Color) { 255, 127,   0, SDL_ALPHA_OPAQUE }
+# define YELLOW (SDL_Color) { 255, 255,   0, SDL_ALPHA_OPAQUE }
+# define GREEN  (SDL_Color) {   0, 255,   0, SDL_ALPHA_OPAQUE }
+# define BLUE   (SDL_Color) {   0,   0, 255, SDL_ALPHA_OPAQUE }
+# define PURPLE (SDL_Color) { 255,   0, 255, SDL_ALPHA_OPAQUE }
+
 #endif

@@ -5,6 +5,7 @@ A simple sand simulator I made to learn about graphics programming in C with SDL
 
 ## Dependencies
 - SDL3
+- SDL3_ttf
 - GNU Make
 
 ## Build

@@ -5,17 +5,17 @@ BUILDDIR = build
 
 CC = gcc
 FLAGS = -Wall -Wextra -Werror $(foreach D, $(INCDIRS), -I$(D))
-SDL_FLAGS = -lSDL3
+SDL_FLAGS = -lSDL3 -lSDL3_ttf
 
 SRCS = $(foreach D, $(SRCDIRS), $(wildcard $(D)/*.c))
 OBJS = $(patsubst %.c, %.o, $(SRCS))
 
 NAME = sandy
 
-all: $(NAME)
+all: $(BUILDDIR)/$(NAME)
 
-$(NAME): $(BUILDDIR)
-$(NAME): $(OBJS)
+$(BUILDDIR)/$(NAME): $(BUILDDIR)
+$(BUILDDIR)/$(NAME): $(OBJS)
 	$(CC) $(OBJS) -o $(BUILDDIR)/$(NAME) $(SDL_FLAGS)
 
 $(BUILDDIR):

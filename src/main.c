@@ -4,12 +4,15 @@
 #include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_time.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_main.h>
+
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "constants.h"
 
@@ -76,6 +79,10 @@ int main() {
 		fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
+	if (!TTF_Init()) {
+		fprintf(stderr, "Failed to initialize SDL_ttf: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
 
 	SDL_Window* main_window = SDL_CreateWindow("Sandy", WIDTH, HEIGHT, 0);
 	if (main_window == NULL) {
@@ -89,6 +96,13 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
+	// TTF_Font* font = TTF_OpenFont("assets/fonts/Inter_18pt-ExtraBold.ttf", 16);
+	TTF_Font* font = TTF_OpenFont("assets/fonts/JetBrainsMonoNerdFont-ExtraBold.ttf", 16);
+	SDL_Surface* text = TTF_RenderText_Blended(font, "0 FPS", 0, WHITE);
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(main_renderer, text);
+	char fps_text[32];
+	SDL_FRect fps_text_rect = { 20, 20, 0, 0 };
+
 	SDL_HideCursor();
 
 	int sand_points_capacity = 1024;
@@ -97,6 +111,7 @@ int main() {
 
 	SDL_Time start_time;
 	SDL_Time end_time;
+	Uint64 frame_time;
 
 	SDL_Event event;
 	int running = 1;
@@ -140,9 +155,16 @@ int main() {
 		}
 		SDL_RenderPoints(main_renderer, sand_points, sand_points_count);
 
-		// Render cursor //
+		// Render Cursor //
 		SDL_SetRenderDrawColor(main_renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 		draw_circle(main_renderer, mouse_x, mouse_y, state->blob_radius, CURSOR_THICKNESS);
+
+		// FPS Display //
+		sprintf(fps_text, "%d FPS", 1000000000 / (int)frame_time);
+		text = TTF_RenderText_Blended(font, fps_text, 0, WHITE);
+		texture = SDL_CreateTextureFromSurface(main_renderer, text);
+		SDL_GetTextureSize(texture, &fps_text_rect.w, &fps_text_rect.h);
+		SDL_RenderTexture(main_renderer, texture, NULL, &fps_text_rect);
 
 		SDL_RenderPresent(main_renderer);
 
@@ -159,10 +181,11 @@ int main() {
 
 		// Calculate how much time to wait after the frame
 		SDL_GetCurrentTime(&end_time);
-		Uint64 frame_time = end_time - start_time;
+		frame_time = end_time - start_time;
 		if (frame_time < FRAME_TIME_NS) {
 			// Need to wait some extra
 			SDL_DelayNS(FRAME_TIME_NS - frame_time);
+			frame_time = FRAME_TIME_NS;
 			// printf("FPS: %03.2f", (float)FPS);
 		}
 		else {
@@ -174,5 +197,8 @@ int main() {
 	SDL_DestroyRenderer(main_renderer);
 	SDL_DestroyWindow(main_window);
 
+	TTF_CloseFont(font);
+
+	TTF_Quit();
 	SDL_Quit();
 }
