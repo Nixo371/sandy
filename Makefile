@@ -1,33 +1,40 @@
-SRCDIRS = src
-TEST_SRCDIRS = test
+SRCDIR = src
 INCDIRS = include
+OBJDIR = obj
 BUILDDIR = build
 
 CC = gcc
 FLAGS = -Wall -Wextra -Werror $(foreach D, $(INCDIRS), -I$(D))
 SDL_FLAGS = -lSDL3 -lSDL3_ttf
 
-SRCS = $(foreach D, $(SRCDIRS), $(wildcard $(D)/*.c))
-OBJS = $(patsubst %.c, %.o, $(SRCS))
+SRCS = $(wildcard $(SRCDIR)/*.c)
+OBJS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
 NAME = sandy
+BIN = $(BUILDDIR)/$(NAME)
 
-all: $(BUILDDIR)/$(NAME)
+all: $(BIN)
 
-$(BUILDDIR)/$(NAME): $(BUILDDIR)
-$(BUILDDIR)/$(NAME): $(OBJS)
+printy: $(SRCS) $(OBJS)
+	echo $(SRCS)
+	echo $(OBJS)
+
+$(BIN): $(OBJS) | $(BUILDDIR)
 	$(CC) $(OBJS) -o $(BUILDDIR)/$(NAME) $(SDL_FLAGS)
+
+$(OBJDIR):
+	mkdir -p $@
 
 $(BUILDDIR):
 	mkdir -p $@
 
-%.o: %.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(FLAGS) -c -o $@ $<
 
 clean:
 	rm -rf $(OBJS)
 
 fclean: clean
-	rm -rf $(NAME)
+	rm -rf $(BIN)
 
 .PHONY: all clean fclean
