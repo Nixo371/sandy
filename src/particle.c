@@ -5,25 +5,33 @@
 
 #include <stdlib.h>
 
+particle* get_particle(game_state* state, int x, int y) {
+	int index = (y * WIDTH) + x;
+	particle* p = &(state->board[index]);
+
+	return (p);
+}
+
 void update_particle(game_state* state, int x, int y) {
-	switch (state->board[x][y].type) {
+	particle* p = get_particle(state, x, y);
+	switch (p->type) {
 		case EMPTY:
 			break;
 		case SAND:
 			// Randomize which direction is checked first
 			int dir = rand() % 2 == 0 ? 1 : -1;
 
-			if (in_bounds(x, y + 1) && state->board[x][y + 1].type == EMPTY) {
-				state->board[x][y].type = EMPTY;
-				state->board[x][y + 1].type = SAND;
+			if (in_bounds(x, y + 1) && get_particle(state, x, y + 1)->type == EMPTY) {
+				p->type = EMPTY;
+				get_particle(state, x, y + 1)->type = SAND;
 			}
-			else if (in_bounds(x - dir, y + 1) && state->board[x - dir][y + 1].type == EMPTY) {
-				state->board[x][y].type = EMPTY;
-				state->board[x - dir][y + 1].type = SAND;
+			else if (in_bounds(x - dir, y + 1) && get_particle(state, x - dir, y + 1)->type == EMPTY) {
+				p->type = EMPTY;
+				get_particle(state, x - dir, y + 1)->type = SAND;
 			}
-			else if (in_bounds(x + dir, y + 1) && state->board[x + dir][y + 1].type == EMPTY) {
-				state->board[x][y].type = EMPTY;
-				state->board[x + dir][y + 1].type = SAND;
+			else if (in_bounds(x + dir, y + 1) && get_particle(state, x + dir, y + 1)->type == EMPTY) {
+				p->type = EMPTY;
+				get_particle(state, x + dir, y + 1)->type = SAND;
 			}
 
 			break;
@@ -44,15 +52,15 @@ void update_all_particles(game_state* state) {
 
 void add_particle(game_state* state, int x, int y, particle_type type) {
 	if (in_bounds(x, y)) {
-		state->board[x][y].type = type;
+		get_particle(state, x, y)->type = type;
 	}
 }
 
 void add_particle_blob(game_state* state, int x, int y, particle_type type) {
 	int radius = state->blob_radius;
 
-	for (int x2 = x - radius; x2 < x + radius; x2++) {
-		for (int y2 = y - radius; y2 < y + radius; y2++) {
+	for (int y2 = y - radius; y2 < y + radius; y2++) {
+		for (int x2 = x - radius; x2 < x + radius; x2++) {
 			int x2_norm = x2 - x;
 			int y2_norm = y2 - y;
 			if ((x2_norm * x2_norm) + (y2_norm * y2_norm) < (radius * radius)) {

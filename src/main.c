@@ -41,13 +41,15 @@ void draw_circle(SDL_Renderer* renderer, float x, float y, float radius, float t
 game_state* init_game_state() {
 	game_state* state = malloc(sizeof(game_state));
 
-	state->board = (particle **) calloc(WIDTH, sizeof(particle *));
-	for (int i = 0; i < WIDTH; i++) {
-		state->board[i] = (particle *) calloc(HEIGHT, sizeof(particle));
-		for (int j = 0; j < HEIGHT; j++) {
-			state->board[i][j].x = i;
-			state->board[i][j].y = j;
-			state->board[i][j].type = EMPTY;
+	state->board = (particle *) calloc(WIDTH * HEIGHT, sizeof(particle));
+
+	particle* p;
+	for (int y = 0; y < HEIGHT; y++) {
+		for (int x = 0; x < WIDTH; x++) {
+			p = get_particle(state, x, y);
+			p->x = x;
+			p->y = y;
+			p->type = EMPTY;
 		}
 	}
 
@@ -57,9 +59,6 @@ game_state* init_game_state() {
 }
 
 void free_game_state(game_state* state) {
-	for (int i = 0; i < WIDTH; i++) {
-		free(state->board[i]);
-	}
 	free(state->board);
 	state->board = NULL;
 
@@ -140,9 +139,11 @@ int main() {
 		// #FFD000 "Gold Web" sand-ish color
 		SDL_SetRenderDrawColor(main_renderer, 255, 208, 0, SDL_ALPHA_OPAQUE);
 		sand_points_count = 0;
-		for (int x = 0; x < WIDTH; x++) {
-			for (int y = 0; y < HEIGHT; y++) {
-				if (state->board[x][y].type == SAND) {
+		particle* p;
+		for (int y = 0; y < HEIGHT; y++) {
+			for (int x = 0; x < WIDTH; x++) {
+				p = get_particle(state, x, y);
+				if (p->type == SAND) {
 					if (sand_points_count >= sand_points_capacity) {
 						sand_points_capacity *= 2;
 						sand_points = (SDL_FPoint *) realloc(sand_points, sand_points_capacity * sizeof(SDL_FPoint));

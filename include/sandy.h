@@ -6,7 +6,9 @@ typedef struct s_particle particle;
 // -------------------- //
 
 typedef struct s_game_state {
-	particle** board;
+	// Row major
+	// x, y = [y * columns + x]
+	particle* board;
 	int blob_radius;
 } game_state;
 

@@ -12,4 +12,3 @@ int in_bounds(int x, int y) {
 
 	return (1);
 }
-
