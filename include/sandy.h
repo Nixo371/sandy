@@ -8,8 +8,8 @@ typedef struct s_particle_type particle_type;
 
 typedef struct s_game_state {
 	particle** board;
-        int particle_type_count;
-        particle_type* particle_types;
+  int particle_type_count;
+  particle_type* particle_types;
 
 	int blob_radius;
 } game_state;

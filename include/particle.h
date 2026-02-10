@@ -43,6 +43,8 @@ typedef struct s_particle {
         particle_type* type;
 } particle;
 
+particle* get_particle(game_state* state, int x, int y);
+
 void update_particle(game_state* state, int x, int y);
 void update_all_particles(game_state* state);
 void add_particle(game_state* state, int x, int y, particle_type* type);

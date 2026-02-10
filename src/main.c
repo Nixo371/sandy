@@ -103,9 +103,6 @@ game_state* init_game_state() {
 }
 
 void free_game_state(game_state* state) {
-	for (int i = 0; i < WIDTH; i++) {
-		free(state->board[i]);
-	}
 	free(state->board);
 	state->board = NULL;
 
