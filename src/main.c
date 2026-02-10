@@ -21,8 +21,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <dirent.h>
+
+particle_type* empty;
+particle_type* sand;
 
 void draw_circle(SDL_Renderer* renderer, float x, float y, float radius, float thickness) {
 	for (float x2 = x - radius - (thickness/2 + 1); x2 <= x + radius + (thickness/2 + 1); x2 += 1) {
@@ -38,18 +43,57 @@ void draw_circle(SDL_Renderer* renderer, float x, float y, float radius, float t
 	}
 }
 
+void parse_all_particle_types(game_state* state) {
+	struct dirent *de;
+
+	DIR *dr = opendir("/home/nucieda/Projects/Sandy/particles");
+
+	if (dr == NULL)  // opendir returns NULL if couldn't open directory
+	{
+		printf("Could not open current directory");
+		return;
+	}
+
+	int particle_type_capacity = 1;
+	state->particle_type_count = 0;
+	state->particle_types = calloc(particle_type_capacity, sizeof(particle_type));
+
+	// Refer https://pubs.opengroup.org/onlinepubs/7990989775/xsh/readdir.html
+	// for readdir()
+	while ((de = readdir(dr)) != NULL) {
+		if (de->d_type != DT_REG) {
+			continue;
+		}
+		// TODO fix the fuck out of this
+		char* file_path = calloc(strlen("/home/nucieda/Projects/Sandy/particles/") + 256, sizeof(char));
+		sprintf(file_path, "/home/nucieda/Projects/Sandy/particles/%s", de->d_name);
+		printf("Particle file found: %s\n", file_path);
+
+		state->particle_types[state->particle_type_count] = *parse_particle_type(file_path);
+		printf("Parsed\n");
+		state->particle_type_count += 1;
+		if (state->particle_type_count >= particle_type_capacity) {
+			particle_type_capacity *= 2;
+			state->particle_types = realloc(state->particle_types, particle_type_capacity * sizeof(particle_type));
+		}
+	}
+
+	closedir(dr);
+}
+
 game_state* init_game_state() {
 	game_state* state = malloc(sizeof(game_state));
 
-	state->board = (particle *) calloc(WIDTH * HEIGHT, sizeof(particle));
+	parse_all_particle_types(state);
 
-	particle* p;
-	for (int y = 0; y < HEIGHT; y++) {
-		for (int x = 0; x < WIDTH; x++) {
-			p = get_particle(state, x, y);
-			p->x = x;
-			p->y = y;
-			p->type = EMPTY;
+	empty = get_particle_type(state, '.');
+	state->board = (particle **) calloc(WIDTH, sizeof(particle *));
+	for (int i = 0; i < WIDTH; i++) {
+		state->board[i] = (particle *) calloc(HEIGHT, sizeof(particle));
+		for (int j = 0; j < HEIGHT; j++) {
+			state->board[i][j].x = i;
+			state->board[i][j].y = j;
+			state->board[i][j].type = empty;
 		}
 	}
 
@@ -104,6 +148,7 @@ int main() {
 
 	SDL_HideCursor();
 
+	sand = get_particle_type(state, 's');
 	int sand_points_capacity = 1024;
 	int sand_points_count = 0;
 	SDL_FPoint* sand_points = calloc(sand_points_capacity, sizeof(SDL_FPoint));
@@ -139,11 +184,9 @@ int main() {
 		// #FFD000 "Gold Web" sand-ish color
 		SDL_SetRenderDrawColor(main_renderer, 255, 208, 0, SDL_ALPHA_OPAQUE);
 		sand_points_count = 0;
-		particle* p;
-		for (int y = 0; y < HEIGHT; y++) {
-			for (int x = 0; x < WIDTH; x++) {
-				p = get_particle(state, x, y);
-				if (p->type == SAND) {
+		for (int x = 0; x < WIDTH; x++) {
+			for (int y = 0; y < HEIGHT; y++) {
+				if (state->board[x][y].type == sand) {
 					if (sand_points_count >= sand_points_capacity) {
 						sand_points_capacity *= 2;
 						sand_points = (SDL_FPoint *) realloc(sand_points, sand_points_capacity * sizeof(SDL_FPoint));
@@ -174,10 +217,10 @@ int main() {
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		mouse_buttons = SDL_GetGlobalMouseState(NULL, NULL);
 		if (mouse_buttons & SDL_BUTTON_LMASK) {
-			add_particle_blob(state, (int)mouse_x, (int)mouse_y, SAND);
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, sand);
 		}
 		if (mouse_buttons & SDL_BUTTON_RMASK) {
-			add_particle_blob(state, (int)mouse_x, (int)mouse_y, EMPTY);
+			add_particle_blob(state, (int)mouse_x, (int)mouse_y, empty);
 		}
 
 		// Calculate how much time to wait after the frame
