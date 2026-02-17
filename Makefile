@@ -15,10 +15,6 @@ BIN = $(BUILDDIR)/$(NAME)
 
 all: $(BIN)
 
-printy: $(SRCS) $(OBJS)
-	echo $(SRCS)
-	echo $(OBJS)
-
 $(BIN): $(OBJS) | $(BUILDDIR)
 	$(CC) $(OBJS) -o $(BUILDDIR)/$(NAME) $(SDL_FLAGS)
 
@@ -29,7 +25,7 @@ $(BUILDDIR):
 	mkdir -p $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	$(CC) $(FLAGS) -c -o $@ $<
+	$(CC) $(FLAGS) -O3 -c -o $@ $<
 
 clean:
 	rm -rf $(OBJS)

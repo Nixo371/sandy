@@ -46,7 +46,7 @@ void draw_circle(SDL_Renderer* renderer, float x, float y, float radius, float t
 void parse_all_particle_types(game_state* state) {
 	struct dirent *de;
 
-	DIR *dr = opendir("/home/nucieda/Projects/Sandy/particles");
+	DIR *dr = opendir("/home/nucieda/Projects/sandy/particles");
 
 	if (dr == NULL)  // opendir returns NULL if couldn't open directory
 	{
@@ -65,8 +65,8 @@ void parse_all_particle_types(game_state* state) {
 			continue;
 		}
 		// TODO fix the fuck out of this
-		char* file_path = calloc(strlen("/home/nucieda/Projects/Sandy/particles/") + 256, sizeof(char));
-		sprintf(file_path, "/home/nucieda/Projects/Sandy/particles/%s", de->d_name);
+		char* file_path = calloc(strlen("/home/nucieda/Projects/sandy/particles/") + 256, sizeof(char));
+		sprintf(file_path, "/home/nucieda/Projects/sandy/particles/%s", de->d_name);
 		printf("Particle file found: %s\n", file_path);
 
 		state->particle_types[state->particle_type_count] = *parse_particle_type(file_path);
@@ -91,9 +91,9 @@ game_state* init_game_state() {
 	for (int i = 0; i < WIDTH; i++) {
 		state->board[i] = (particle *) calloc(HEIGHT, sizeof(particle));
 		for (int j = 0; j < HEIGHT; j++) {
-			state->board[i][j].x = i;
-			state->board[i][j].y = j;
-			state->board[i][j].type = empty;
+			get_particle(state, i, j)->x = i;
+			get_particle(state, i, j)->y = j;
+			get_particle(state, i, j)->type = empty;
 		}
 	}
 
@@ -155,7 +155,7 @@ int main() {
 
 	SDL_Time start_time;
 	SDL_Time end_time;
-	Uint64 frame_time;
+	Uint64 frame_time = 1;
 
 	SDL_Event event;
 	int running = 1;
@@ -186,7 +186,7 @@ int main() {
 		sand_points_count = 0;
 		for (int x = 0; x < WIDTH; x++) {
 			for (int y = 0; y < HEIGHT; y++) {
-				if (state->board[x][y].type == sand) {
+				if (get_particle(state, x, y)->type == sand) {
 					if (sand_points_count >= sand_points_capacity) {
 						sand_points_capacity *= 2;
 						sand_points = (SDL_FPoint *) realloc(sand_points, sand_points_capacity * sizeof(SDL_FPoint));

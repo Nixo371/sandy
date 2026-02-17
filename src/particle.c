@@ -11,16 +11,15 @@
 #include <strings.h>
 
 particle* get_particle(game_state* state, int x, int y) {
-	int index = (y * WIDTH) + x;
-	particle* p = &(state->board[index]);
+	particle* p = &state->board[x][y];
 
 	return (p);
 }
 
 void update_particle(game_state* state, int x, int y) {
-        for (int i = 0; i < state->board[x][y].type->rule_count; i++) {
+        for (int i = 0; i < get_particle(state, x, y)->type->rule_count; i++) {
                 int rule_valid = 1;
-                rule r = state->board[x][y].type->rules[i];
+                rule r = get_particle(state, x, y)->type->rules[i];
                 for (int input = 0; input < 9; input++) {
                         if (r.input[input] == '*') {
                                 continue;
@@ -40,7 +39,7 @@ void update_particle(game_state* state, int x, int y) {
                                 y_off = 1;
                         }
 
-                        if (!in_bounds(x + x_off, y + y_off) || state->board[x + x_off][y + y_off].type->id != r.input[input]) {
+                        if (!in_bounds(x + x_off, y + y_off) || get_particle(state, x + x_off, y + y_off)->type->id != r.input[input]) {
                                 rule_valid = 0;
                                 break;
                         }
@@ -70,7 +69,7 @@ void update_particle(game_state* state, int x, int y) {
                         }
 
                         if (in_bounds(x + x_off, y + y_off)) {
-                                state->board[x + x_off][y + y_off].type = get_particle_type(state, r.output[output]);
+				get_particle(state, x + x_off, y + y_off)->type = get_particle_type(state, r.output[output]);
                         }
                 }
 
