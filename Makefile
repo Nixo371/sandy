@@ -16,7 +16,7 @@ BIN = $(BUILDDIR)/$(NAME)
 all: $(BIN)
 
 $(BIN): $(OBJS) | $(BUILDDIR)
-	$(CC) $(OBJS) -o $(BUILDDIR)/$(NAME) $(SDL_FLAGS)
+	$(CC) $(OBJS) -O3 -o $(BUILDDIR)/$(NAME) $(SDL_FLAGS)
 
 $(OBJDIR):
 	mkdir -p $@
